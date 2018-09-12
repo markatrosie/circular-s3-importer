@@ -3,14 +3,18 @@ const { exec } = require('child_process');
 const sizeOfImage = require('image-size');
 
 class ImageMagick {
-  constructor(pathToMagick) {
+  constructor(pathToMagick, quiet) {
     this.pathToMagick = pathToMagick;
+    this.quiet = typeof quiet === undefined ? false : Boolean(quiet);
+  }
+
+  log() {
+    this.quiet || console.log.apply(console, arguments);
   }
 
   execMagick(cliParams) {
     return new Promise((resolve, reject) => {
       const fullCmd = this.pathToMagick + ' ' + cliParams.join(' ');
-      console.log(fullCmd);
       exec(fullCmd, {}, (error, stdout, stderr) => {
         if (error) {
           console.log(stderr);
@@ -24,7 +28,7 @@ class ImageMagick {
 
   async createFromMaxWidth(originalPath, maxWidth, outputPath) {
     const resizeSpec = `-resize "${maxWidth}\\>"`;
-    console.log('Resize spec:', resizeSpec);
+    this.log('Max width %f -->', maxWidth, outputPath);
     await this.execMagick([originalPath, resizeSpec, outputPath]);
   }
 
@@ -44,6 +48,9 @@ class ImageMagick {
     const cropSize = `${region.width}x${region.height}`;
     const cropOffset = `+${region.x}+${region.y}!`;
     const cropSpec = `-crop "${cropSize}${cropOffset}"`;
+
+    this.log('Extracting [%f, %f, %f, %f] -->',
+      region.x, region.y, region.width, region.height, outputPath);
     await this.execMagick([originalPath, cropSpec, outputPath]);
   }
 }
