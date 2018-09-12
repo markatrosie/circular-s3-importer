@@ -15,5 +15,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "bin": {
+    "circular-importer": "./cli.js"
+  }
 }
