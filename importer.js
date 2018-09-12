@@ -1,10 +1,26 @@
-const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
+
+const sizeOfImage = require('image-size');
 const csv = require('fast-csv');
 const _ = require('underscore');
 
 magickPath = '"C:\\Program\ Files\\ImageMagick-7.0.8-Q16\\magick.exe"';
+
+function runCommand(cmdArgs) {
+  return new Promise((resolve, reject) => {
+    const fullCmd = cmdArgs.join(' ');
+    console.log('>> ', fullCmd);
+    exec(fullCmd, {}, (error, stdout, stderr) => {
+      if (error) {
+        console.log(stderr);
+        reject(error.Error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 class Importer {
   constructor(args) {
@@ -31,6 +47,7 @@ class Importer {
     this.promos.push({
       page_id: parseInt(raw.page_id),
       upcs: raw.upcs.split(/\s*,\s*/),
+      title: raw.title || '',
       x: parseFloat(raw.x),
       y: parseFloat(raw.y),
       width: parseFloat(raw.width),
@@ -74,6 +91,7 @@ class Importer {
     const fullName = `${basename}-full${ext}`;
     const thumbName = `${basename}-thumb${ext}`;
 
+    // Add definition to manifest.
     this.manifest.pages[pageNum] = {
       links: {
         full: fullName,
@@ -82,42 +100,43 @@ class Importer {
       ads: []
     };
 
-    await this.runCommand([magickPath, pageFile, '-resize "1200\\>"', fullName]);
-    await this.runCommand([magickPath, pageFile, '-resize "300\\>"', thumbName]);
+    // Process full- and thumb-sized versions.
+    await runCommand([magickPath, pageFile, '-resize "1200\\>"', fullName]);
+    await runCommand([magickPath, pageFile, '-resize "300\\>"', thumbName]);
 
-    processingPromos = promos.map(
-      (promo, promoId) => this.processPromo(
-        promo,
-        promoId + 1,
-        pageNum,
-        pageFile
-      )
-    );
-
-    await Promise.all(processingPromos);
+    // Process promos under this page.
+    for (let i = 0; i < promos.length; i++) {
+      await this.processPromo(promos[i], i + 1, pageNum, pageFile);
+    }
   }
 
   async processPromo(promo, promoNumber, pageNum, pageFile) {
     const basename = path.basename(pageFile);
     const ext = path.extname(pageFile);
     const filename = `${basename}-${pageNum}-${promoNumber}${ext}`;
-    this.manifest.pages[pageNum].ads.push(promo);
-    await this.runCommand([magickPath, pageFile, '-crop', `${promo.x}x${promo.y}+${promo.width}+${promo.height}\!`, filename]);
-  }
+    const imageDimensions = sizeOfImage(pageFile);
 
-  runCommand(cmdArgs) {
-    return new Promise((resolve, reject) => {
-      const fullCmd = cmdArgs.join(' ');
-      console.log('>> ', fullCmd);
-      exec(fullCmd, {}, (error, stdout, stderr) => {
-        if (error) {
-          console.log(stderr);
-          reject(error.Error);
-        } else {
-          resolve();
-        }
-      });
+    // Add definition to manifest.
+    this.manifest.pages[pageNum].ads.push({
+      title: promo.title,
+      upcs: promo.upcs,
+      x: promo.x,
+      y: promo.y,
+      width: promo.width,
+      height: promo.height
     });
+
+    // Process regions into ad images.
+    const regionPx = {
+      x: promo.x / 100 * imageDimensions.width,
+      y: promo.y / 100 * imageDimensions.height,
+      width: promo.width / 100 * imageDimensions.width,
+      height: promo.height / 100 * imageDimensions.height
+    }
+    const cropSize = `${regionPx.width}x${regionPx.height}`;
+    const cropOffset = `+${regionPx.x}+${regionPx.y}\!`;
+    const cropGeometry = cropSize + cropOffset;
+    await runCommand([magickPath, pageFile, '-crop', cropGeometry, filename]);
   }
 }
 

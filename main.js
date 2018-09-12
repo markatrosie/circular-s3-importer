@@ -1,5 +1,4 @@
 const fs = require('fs');
-
 const Importer = require('./importer');
 
 /**
@@ -43,7 +42,7 @@ function parseArgs(args) {
 function writeManifestFile(manifest) {
   return new Promise((resolve, reject) => {
     const manifestPath = './manifest.json';
-    const manifestJson = JSON.stringify(manifest);
+    const manifestJson = JSON.stringify(manifest, null, 2);
     fs.writeFile(manifestPath, manifestJson,
       (error) => error && reject(error) || resolve());
   });
