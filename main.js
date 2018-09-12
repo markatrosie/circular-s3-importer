@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const Importer = require('./importer');
 
 /**
@@ -7,20 +9,6 @@ const Importer = require('./importer');
  * Output: (standard output)
  *  Circular definition suitable for manifest.json, containing all
  *  pages and ads.
- * 
- * Process:
- *  - Initialize empty manifest
- *  - Load promos file into array of <column, value> objects
- *  - Validate expected headers: page_id, upcs, x, y, width, height
- *  - Validate pageNFile for each N in unique page_id
- *  - For each page N...
- *    - Add manifest.pages[N] definition
- *    - magick #{N} -resize #{1200}\> #{N-full}
- *    - magick #{N} -resize #{300}\> #{N-thumb}
- *    - For each ad A in N...
- *      - Add manifest.pages[N].ads[A] definition
- *      - magick #{N} -crop #{ad.x}x#{ad.y}+#{ad.w}+#{ad.h}\! #{N-ad-A}
- *  - Output manifest.json to stdout
  */
 
 const EXIT_CODES = {
@@ -30,7 +18,12 @@ const EXIT_CODES = {
 function usage() {
   console.log('Usage: npm run import <promosFile> <page1File> [<page2File>, ...]');
   console.log('');
-  console.log('Results will be displayed directly to standard output, so make sure to capture it to a file.');
+  console.log(
+    'This will generate a mostly complete manifest for these pages, and will '
+    + 'generate full size and thumbnail images for them as well. It will '
+    + 'additionally take the input from promosFile and produce sliced ad '
+    + 'images for each promo defined.'
+  );
 }
 
 function parseArgs(args) {
@@ -47,12 +40,23 @@ function parseArgs(args) {
   return parsed;
 }
 
-function main() {
-  const args = process.argv.slice(2);
-  const parsed = parseArgs(args);
-  console.log(parsed);
-  const importer = new Importer(args);
-  importer.import();
+function writeManifestFile(manifest) {
+  return new Promise((resolve, reject) => {
+    const manifestPath = './manifest.json';
+    const manifestJson = JSON.stringify(manifest);
+    fs.writeFile(manifestPath, manifestJson,
+      (error) => error && reject(error) || resolve());
+  });
 }
 
-main();
+async function main() {
+  const args = process.argv.slice(2);
+  const parsed = parseArgs(args);
+  const importer = new Importer(parsed);  
+  await importer.import();
+  await writeManifestFile(importer.manifest);
+}
+
+main()
+  .then(() => console.log('Import complete.'))
+  .catch((error) => console.log('Import failed:', error));
