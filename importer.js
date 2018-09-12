@@ -58,16 +58,25 @@ class Importer {
 
   async import() {
     await this.loadPromos();
-    const promosByPage = _.groupBy(this.promos, 'page_id');
-    const pageProcessing = Object.keys(promosByPage).map(
-      (key, pageId) => this.processPage(
-        this.pageFiles[pageId],
-        promosByPage[key],
-        pageId
-      )
-    );
 
-    await Promise.all(pageProcessing);
+    // Promos are grouped by page ID and those page IDs are sorted according
+    // to their numeric value. This way page_id values don't need to be
+    // 0-based. Their numerically-sorted order just needs to match what is
+    // provided in this.pageFiles.
+    const promosByPage = _.groupBy(this.promos, 'page_id');
+    const orderedPageIds = Object.keys(promosByPage)
+      .sort((a, b) => parseInt(b) - parseInt(a));
+
+    for(let pageId = 0; pageId < this.pageFiles.length; pageId++) {
+      console.log('Processing page %d/%d', pageId + 1, this.pageFiles.length)
+
+      const promos = promosByPage[orderedPageIds[pageId]] || [];
+      await this.processPage(
+        this.pageFiles[pageId],
+        promos,
+        pageId
+      );
+    }
   }
 
   async processPage(pageFile, promos, pageId) {
