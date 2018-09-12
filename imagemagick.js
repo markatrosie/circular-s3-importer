@@ -15,7 +15,6 @@ class ImageMagick {
   execMagick(cliParams) {
     return new Promise((resolve, reject) => {
       const fullCmd = this.pathToMagick + ' ' + cliParams.join(' ');
-      resolve(); return;
       exec(fullCmd, {}, (error, stdout, stderr) => {
         if (error) {
           console.log(stderr);
