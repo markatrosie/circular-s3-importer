@@ -1,31 +1,16 @@
 const path = require('path');
-const { exec } = require('child_process');
 
-const sizeOfImage = require('image-size');
 const csv = require('fast-csv');
 const _ = require('underscore');
 
-magickPath = '"C:\\Program\ Files\\ImageMagick-7.0.8-Q16\\magick.exe"';
-
-function runCommand(cmdArgs) {
-  return new Promise((resolve, reject) => {
-    const fullCmd = cmdArgs.join(' ');
-    console.log('>> ', fullCmd);
-    exec(fullCmd, {}, (error, stdout, stderr) => {
-      if (error) {
-        console.log(stderr);
-        reject(error.Error);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
 class Importer {
-  constructor(args) {
-    this.promosFile = args.promosFile;
-    this.pageFiles = args.pageFiles;
+  constructor(imageMagick, opts) {
+    this.imageMagick = imageMagick;
+    this.promosFile = opts.promosFile;
+    this.pageFiles = opts.pageFiles;
+    this.fullSizeWidth = opts.fullSizeWidth;
+    this.thumbnailWidth = opts.thumbnailWidth;
+
     this.promos = [];
     this.manifest = {
       period: {
@@ -101,8 +86,8 @@ class Importer {
     };
 
     // Process full- and thumb-sized versions.
-    await runCommand([magickPath, pageFile, '-resize "1200\\>"', fullName]);
-    await runCommand([magickPath, pageFile, '-resize "300\\>"', thumbName]);
+    await this.imageMagick.createFromMaxWidth(pageFile, this.fullSizeWidth, fullName);
+    await this.imageMagick.createFromMaxWidth(pageFile, this.thumbnailWidth, thumbName);
 
     // Process promos under this page.
     for (let i = 0; i < promos.length; i++) {
@@ -114,7 +99,6 @@ class Importer {
     const basename = path.basename(pageFile);
     const ext = path.extname(pageFile);
     const filename = `${basename}-${pageNum}-${promoNumber}${ext}`;
-    const imageDimensions = sizeOfImage(pageFile);
 
     // Add definition to manifest.
     this.manifest.pages[pageNum].ads.push({
@@ -127,16 +111,7 @@ class Importer {
     });
 
     // Process regions into ad images.
-    const regionPx = {
-      x: promo.x / 100 * imageDimensions.width,
-      y: promo.y / 100 * imageDimensions.height,
-      width: promo.width / 100 * imageDimensions.width,
-      height: promo.height / 100 * imageDimensions.height
-    }
-    const cropSize = `${regionPx.width}x${regionPx.height}`;
-    const cropOffset = `+${regionPx.x}+${regionPx.y}\!`;
-    const cropGeometry = cropSize + cropOffset;
-    await runCommand([magickPath, pageFile, '-crop', cropGeometry, filename]);
+    await this.imageMagick.extractRegionByPct(pageFile, promo, filename);
   }
 }
 

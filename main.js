@@ -1,6 +1,17 @@
 const fs = require('fs');
 const Importer = require('./importer');
 
+const ImageMagick = require('./imagemagick');
+
+/**
+ * Things that should come through CLI options if this is ever made more robust.
+ */
+const config = {
+  imageMagickPath: '"C:\\Program\ Files\\ImageMagick-7.0.8-Q16\\magick.exe"',
+  fullSizeWidth: 1200,
+  thumbnailWidth: 300
+};
+
 /**
  * Input: <promosFile> <page1File> [<page2File>, ...]
  *  <promosFile>   weekly_ad_promos.psv
@@ -33,7 +44,10 @@ function parseArgs(args) {
 
   const parsed = {
     promosFile: args[0],
-    pageFiles: args.slice(1)
+    pageFiles: args.slice(1),
+    fullSizeWidth: config.fullSizeWidth,
+    thumbnailWidth: config.thumbnailWidth,
+    imageMagickPath: config.imageMagickPath
   }
 
   return parsed;
@@ -49,9 +63,9 @@ function writeManifestFile(manifest) {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const parsed = parseArgs(args);
-  const importer = new Importer(parsed);  
+  const args = parseArgs(process.argv.slice(2));
+  const imageMagick = new ImageMagick(config.imageMagickPath);
+  const importer = new Importer(imageMagick, args);
   await importer.import();
   await writeManifestFile(importer.manifest);
 }
