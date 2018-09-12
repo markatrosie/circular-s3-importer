@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-
-const fs = require('fs');
-const Importer = require('./importer');
-
-const ImageMagick = require('./imagemagick');
+const run = require('./runner');
 
 /**
  * Things that should come through CLI options if this is ever made more robust.
@@ -13,15 +9,6 @@ const config = {
   fullSizeWidth: 1200,
   thumbnailWidth: 300
 };
-
-/**
- * Input: <promosFile> <page1File> [<page2File>, ...]
- *  <promosFile>   weekly_ad_promos.psv
- *  <pageNFile>    the image file for each page of the ad
- * Output: (standard output)
- *  Circular definition suitable for manifest.json, containing all
- *  pages and ads.
- */
 
 const EXIT_CODES = {
   BAD_ARGS: 1
@@ -55,23 +42,8 @@ function parseArgs(args) {
   return parsed;
 }
 
-function writeManifestFile(manifest) {
-  return new Promise((resolve, reject) => {
-    const manifestPath = './manifest.json';
-    const manifestJson = JSON.stringify(manifest, null, 2);
-    fs.writeFile(manifestPath, manifestJson,
-      (error) => error && reject(error) || resolve());
-  });
-}
+const args = parseArgs(process.argv.slice(2));
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const imageMagick = new ImageMagick(config.imageMagickPath);
-  const importer = new Importer(imageMagick, args);
-  await importer.import();
-  await writeManifestFile(importer.manifest);
-}
-
-main()
+run(args)
   .then(() => console.log('Import complete.'))
   .catch((error) => console.log('Import failed:', error));
