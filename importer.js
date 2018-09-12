@@ -63,21 +63,21 @@ class Importer {
       (key, pageId) => this.processPage(
         this.pageFiles[pageId],
         promosByPage[key],
-        pageId + 1
+        pageId
       )
     );
 
     await Promise.all(pageProcessing);
   }
 
-  async processPage(pageFile, promos, pageNum) {
+  async processPage(pageFile, promos, pageId) {
     const ext = path.extname(pageFile);
     const basename = path.basename(pageFile, ext);
     const fullName = `${basename}-full${ext}`;
     const thumbName = `${basename}-thumb${ext}`;
 
     // Add definition to manifest.
-    this.manifest.pages[pageNum] = {
+    this.manifest.pages[pageId] = {
       links: {
         full: fullName,
         thumb: thumbName
@@ -91,17 +91,17 @@ class Importer {
 
     // Process promos under this page.
     for (let i = 0; i < promos.length; i++) {
-      await this.processPromo(promos[i], i + 1, pageNum, pageFile);
+      await this.processPromo(promos[i], i + 1, pageId, pageFile);
     }
   }
 
-  async processPromo(promo, promoNumber, pageNum, pageFile) {
-    const basename = path.basename(pageFile);
+  async processPromo(promo, promoNumber, pageId, pageFile) {
     const ext = path.extname(pageFile);
-    const filename = `${basename}-${pageNum}-${promoNumber}${ext}`;
+    const basename = path.basename(pageFile, ext);
+    const filename = `${basename}-${pageId + 1}-${promoNumber}${ext}`;
 
     // Add definition to manifest.
-    this.manifest.pages[pageNum].ads.push({
+    this.manifest.pages[pageId].ads.push({
       title: promo.title,
       upcs: promo.upcs,
       x: promo.x,
