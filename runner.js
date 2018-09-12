@@ -3,14 +3,6 @@ const Importer = require('./importer');
 
 const ImageMagick = require('./imagemagick');
 
-/**
- * Input: <promosFile> <page1File> [<page2File>, ...]
- *  <promosFile>   weekly_ad_promos.psv
- *  <pageNFile>    the image file for each page of the ad
- * Output: (standard output)
- *  Circular definition suitable for manifest.json, containing all
- *  pages and ads.
- */
 function writeManifestFile(manifest) {
   return new Promise((resolve, reject) => {
     const manifestPath = './manifest.json';
