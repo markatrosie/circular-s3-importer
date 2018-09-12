@@ -13,7 +13,7 @@ The script is not ideally robust at this time. After installing, you will may to
 
 `circular-import <path to weekly-ad-promos.psv> <path to page 1> [<path to page 2>, ...]`
 
-Your current directory will be populated with new files, possibly overwriting what is there:
+Your current directory will be populated with new files, possibly overwriting what is there. *If you do not have a weekly-ad-promos.psv file*, you must create an empty file and provide it as the first argument.
 
 1. A `-thumb.ext` and `-full.ext` variation of each page file.
 1. A `-#.ext` file for each promo on each page. For example, `page1-1.png`, `page1-2.png`, and so on.
