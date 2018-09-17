@@ -26,7 +26,8 @@ class Importer {
 
   loadPromo(raw) {
     if (!raw.page_id || !raw.upcs || !raw.x || !raw.y || !raw.width || !raw.height) {
-      throw new Error('Invalid promo loaded');
+      console.log('Ignoring invalid promo:', raw);
+      return;
     }
 
     this.promos.push({
@@ -45,8 +46,7 @@ class Importer {
       const promos = [];
       
       const csvOpts = {
-        headers: true,
-        delimiter: '|'
+        headers: true
       }
 
       csv.fromPath(this.promosFile, csvOpts)
@@ -107,6 +107,7 @@ class Importer {
   async processPromo(promo, promoNumber, pageId, pageFile) {
     const ext = path.extname(pageFile);
     const basename = path.basename(pageFile, ext);
+    promoNumber = promoNumber <= 9 ? '0' + String(promoNumber) : String(promoNumber);
     const filename = `${basename}-${pageId + 1}-${promoNumber}${ext}`;
 
     // Add definition to manifest.
