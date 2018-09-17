@@ -28,10 +28,7 @@ class Importer {
 
   makeOutputPath(filename) {
     return path.normalize(
-      path.join(
-        this.outputPath,
-        this.filePrefix + filename
-      )
+      path.join(this.outputPath, filename)
     );
   }
 
@@ -93,8 +90,8 @@ class Importer {
   async processPage(pageFile, promos, pageId) {
     const ext = path.extname(pageFile);
     const basename = path.basename(pageFile, ext);
-    const fullName = `${basename}-full${ext}`;
-    const thumbName = `${basename}-thumb${ext}`;
+    const fullName = `${this.filePrefix}${basename}-full${ext}`;
+    const thumbName = `${this.filePrefix}${basename}-thumb${ext}`;
     const fullPath = this.makeOutputPath(fullName);
     const thumbPath = this.makeOutputPath(thumbName);
 
@@ -121,7 +118,7 @@ class Importer {
     const ext = path.extname(pageFile);
     const basename = path.basename(pageFile, ext);
     promoNumber = promoNumber > 9 ? String(promoNumber) : '0' + String(parseInt(promoNumber));
-    const filename = `${basename}-${promoNumber}${ext}`;
+    const filename = `${this.filePrefix}${basename}-${promoNumber}${ext}`;
     const filePath = this.makeOutputPath(filename);
 
     // Add definition to manifest.
