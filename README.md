@@ -1,6 +1,13 @@
 # circular-s3-importer
 Node tool for processing a retailer import package into a format appropriate for S3.
 
+## Rough draft
+This tool has a rough interface due to it not likely having a long lifespan. In particular:
+
+* Make the promo file optional.
+* Output results to a directory for easy zipping / cleanup.
+* Accept flight dates / title on the command line so the generated manifest.json is more complete.
+
 ## Installation Instructions
 
 1. Install ImageMagick
@@ -11,9 +18,9 @@ The script is not ideally robust at this time. After installing, you will may to
 
 ## Usage
 
-`circular-import <path to weekly-ad-promos.psv> <path to page 1> [<path to page 2>, ...]`
+`circular-import <path to weekly-ad-promos.csv> <path to page 1> [<path to page 2>, ...]`
 
-Your current directory will be populated with new files, possibly overwriting what is there. *If you do not have a weekly-ad-promos.psv file*, you must create an empty file and provide it as the first argument.
+Your current directory will be populated with new files, possibly overwriting what is there. *If you do not have a weekly-ad-promos.csv file*, you must create an empty file and provide it as the first argument.
 
 1. A `-thumb.ext` and `-full.ext` variation of each page file.
 1. A `-#.ext` file for each promo on each page. For example, `page1-1.png`, `page1-2.png`, and so on.
