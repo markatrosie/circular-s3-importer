@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+const path = require('path');
+const fs = require('fs');
+
 const run = require('./runner');
 
 /**
@@ -15,28 +19,34 @@ const EXIT_CODES = {
 };
 
 function usage() {
-  console.log('Usage: npm run import <promosFile> <page1File> [<page2File>, ...]');
+  console.log('Usage: npm run import <outputDir> <promosFile> <page1File> [<page2File>, ...]');
   console.log('');
   console.log(
     'This will generate a mostly complete manifest for these pages, and will '
     + 'generate full size and thumbnail images for them as well. It will '
     + 'additionally take the input from promosFile and produce sliced ad '
-    + 'images for each promo defined.'
+    + 'images for each promo defined. All files will be generated into '
+    + 'outputDir, possibly replacing what is already there. Be cautious.'
   );
 }
 
 function parseArgs(args) {
-  if (args.length < 2) {
+  if (args.length < 3) {
     usage();
     process.exit(EXIT_CODES.BAD_ARGS);
   }
 
   const parsed = {
-    promosFile: args[0],
-    pageFiles: args.slice(1),
+    outputPath: path.normalize(args[0]),
+    promosFile: args[1],
+    pageFiles: args.slice(2),
     fullSizeWidth: config.fullSizeWidth,
     thumbnailWidth: config.thumbnailWidth,
     imageMagickPath: config.imageMagickPath
+  }
+
+  if (!fs.existsSync(parsed.outputPath)) {
+    console.log(`Unable to continue: outputPath "${parsed.outputPath}" does not exist`);
   }
 
   return parsed;

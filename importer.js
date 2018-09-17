@@ -10,6 +10,7 @@ class Importer {
     this.pageFiles = opts.pageFiles;
     this.fullSizeWidth = opts.fullSizeWidth;
     this.thumbnailWidth = opts.thumbnailWidth;
+    this.outputPath = opts.outputPath;
 
     this.promos = [];
     this.manifest = {
@@ -22,6 +23,10 @@ class Importer {
       },
       pages: []
     };
+  }
+
+  makeOutputPath(filename) {
+    return path.normalize(path.join(this.outputPath, filename));
   }
 
   loadPromo(raw) {
@@ -65,7 +70,7 @@ class Importer {
     // provided in this.pageFiles.
     const promosByPage = _.groupBy(this.promos, 'page_id');
     const orderedPageIds = Object.keys(promosByPage)
-      .sort((a, b) => parseInt(b) - parseInt(a));
+      .sort((a, b) => parseInt(a) - parseInt(b));
 
     for(let pageId = 0; pageId < this.pageFiles.length; pageId++) {
       console.log('Processing page %d/%d', pageId + 1, this.pageFiles.length)
@@ -84,6 +89,8 @@ class Importer {
     const basename = path.basename(pageFile, ext);
     const fullName = `${basename}-full${ext}`;
     const thumbName = `${basename}-thumb${ext}`;
+    const fullPath = this.makeOutputPath(fullName);
+    const thumbPath = this.makeOutputPath(thumbName);
 
     // Add definition to manifest.
     this.manifest.pages[pageId] = {
@@ -95,20 +102,21 @@ class Importer {
     };
 
     // Process full- and thumb-sized versions.
-    await this.imageMagick.createFromMaxWidth(pageFile, this.fullSizeWidth, fullName);
-    await this.imageMagick.createFromMaxWidth(pageFile, this.thumbnailWidth, thumbName);
+    await this.imageMagick.createFromMaxWidth(pageFile, this.fullSizeWidth, fullPath);
+    await this.imageMagick.createFromMaxWidth(pageFile, this.thumbnailWidth, thumbPath);
 
     // Process promos under this page.
     for (let i = 0; i < promos.length; i++) {
-      await this.processPromo(promos[i], i + 1, pageId, pageFile);
+      await this.processPromo(promos[i], i + 1, pageId, pageFile, fullName);
     }
   }
 
   async processPromo(promo, promoNumber, pageId, pageFile) {
     const ext = path.extname(pageFile);
     const basename = path.basename(pageFile, ext);
-    promoNumber = promoNumber <= 9 ? '0' + String(promoNumber) : String(promoNumber);
-    const filename = `${basename}-${pageId + 1}-${promoNumber}${ext}`;
+    promoNumber = promoNumber > 9 ? String(promoNumber) : '0' + String(parseInt(promoNumber));
+    const filename = `${basename}-${promoNumber}${ext}`;
+    const filePath = this.makeOutputPath(filename);
 
     // Add definition to manifest.
     this.manifest.pages[pageId].ads.push({
@@ -117,11 +125,14 @@ class Importer {
       x: promo.x,
       y: promo.y,
       width: promo.width,
-      height: promo.height
+      height: promo.height,
+      links: {
+        full: filename
+      }
     });
 
     // Process regions into ad images.
-    await this.imageMagick.extractRegionByPct(pageFile, promo, filename);
+    await this.imageMagick.extractRegionByPct(pageFile, promo, filePath);
   }
 }
 
