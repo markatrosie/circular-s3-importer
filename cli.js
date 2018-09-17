@@ -37,9 +37,10 @@ function parseArgs(args) {
   }
 
   const parsed = {
-    outputPath: path.normalize(args[0]),
-    promosFile: args[1],
-    pageFiles: args.slice(2),
+    filePrefix: args[0],
+    outputPath: path.normalize(args[1]),
+    promosFile: args[2],
+    pageFiles: args.slice(3),
     fullSizeWidth: config.fullSizeWidth,
     thumbnailWidth: config.thumbnailWidth,
     imageMagickPath: config.imageMagickPath

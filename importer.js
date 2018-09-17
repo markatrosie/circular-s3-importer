@@ -11,6 +11,7 @@ class Importer {
     this.fullSizeWidth = opts.fullSizeWidth;
     this.thumbnailWidth = opts.thumbnailWidth;
     this.outputPath = opts.outputPath;
+    this.filePrefix = opts.filePrefix;
 
     this.promos = [];
     this.manifest = {
@@ -26,7 +27,12 @@ class Importer {
   }
 
   makeOutputPath(filename) {
-    return path.normalize(path.join(this.outputPath, filename));
+    return path.normalize(
+      path.join(
+        this.outputPath,
+        this.filePrefix + filename
+      )
+    );
   }
 
   loadPromo(raw) {
