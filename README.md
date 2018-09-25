@@ -18,9 +18,11 @@ The script is not ideally robust at this time. After installing, you will may to
 
 ## Usage
 
-`circular-import <path to weekly-ad-promos.csv> <path to page 1> [<path to page 2>, ...]`
+To read about command line usage, run the importer by itself:
 
-Your current directory will be populated with new files, possibly overwriting what is there. *If you do not have a weekly-ad-promos.csv file*, you must create an empty file and provide it as the first argument.
+`circular-import`
+
+The output directory will be populated with new files, possibly overwriting what is there. *If you do not have a weekly-ad-promos.csv file*, you must create an empty file and provide it as the first argument.
 
 1. A `-thumb.ext` and `-full.ext` variation of each page file.
 1. A `-#.ext` file for each promo on each page. For example, `page1-1.png`, `page1-2.png`, and so on.

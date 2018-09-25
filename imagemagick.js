@@ -41,11 +41,6 @@ class ImageMagick {
       height: region.height / 100 * imageDimensions.height
     };
 
-    console.log('Extracting from', originalPath);
-    console.log('Region:', region);
-    console.log('Dims:', imageDimensions);
-    console.log('Regions by pct:', regionByPct);
-
     await this.extractRegionByPx(originalPath, regionByPct, outputPath);
   }
 

@@ -19,7 +19,7 @@ const EXIT_CODES = {
 };
 
 function usage() {
-  console.log('Usage: npm run import <outputDir> <promosFile> <page1File> [<page2File>, ...]');
+  console.log('Usage: npm run import <filePrefix> <outputDir> <promosFile> <page1File> [<page2File>, ...]');
   console.log('');
   console.log(
     'This will generate a mostly complete manifest for these pages, and will '
